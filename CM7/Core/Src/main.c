@@ -145,7 +145,7 @@ int main(void) {
 	while (!ringbuff_is_ready(rb_cm4_to_cm7)
 			|| !ringbuff_is_ready(rb_cm7_to_cm4)) {
 	}
-	//	ringbuff_write(rb_cm7_to_cm4, "[CM7] Core ready\r\n", 18);
+//	ringbuff_write(rb_cm7_to_cm4, "[CM7] Core ready\r\n", 18);
 
 	/* Set default time */
 	time = t1 = HAL_GetTick();
@@ -157,6 +157,7 @@ int main(void) {
 		void *addr;
 
 		time = HAL_GetTick();
+
 
 		/* Check if CPU2 sent some data to CPU1 core */
 		while ((len = ringbuff_get_linear_block_read_length(rb_cm4_to_cm7)) > 0) {

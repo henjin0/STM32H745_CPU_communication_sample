@@ -52,7 +52,8 @@ UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
 
-uint8_t RxData;
+uint8_t RxData[8];
+const int UART_DATALEN = 8;
 
 /* USER CODE BEGIN PV */
 
@@ -116,7 +117,7 @@ int main(void) {
 	MX_USART6_UART_Init();
 	/* USER CODE BEGIN 2 */
 
-	HAL_UART_Receive_IT(&huart5, &RxData, 1);
+	HAL_UART_Receive_IT(&huart5, RxData, UART_DATALEN);
 
 	/* USER CODE END 2 */
 
@@ -177,11 +178,11 @@ int main(void) {
 	/* USER CODE END 3 */
 }
 
-char data;
+char* data;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-  HAL_UART_Receive_IT(&huart5, &RxData, 1);
-  data = RxData;
+  HAL_UART_Receive_IT(&huart5, RxData, UART_DATALEN);
+  data = (char* )RxData;
 
 }
 
