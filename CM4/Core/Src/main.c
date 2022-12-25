@@ -23,7 +23,6 @@
 /* Ringbuffer variables */
 volatile ringbuff_t *rb_cm4_to_cm7 = (void*) BUFF_CM4_TO_CM7_ADDR;
 volatile ringbuff_t *rb_cm7_to_cm4 = (void*) BUFF_CM7_TO_CM4_ADDR;
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -53,6 +52,8 @@ UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
 
+uint8_t RxData;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -61,6 +62,7 @@ UART_HandleTypeDef huart6;
 static void MX_GPIO_Init(void);
 static void MX_UART5_Init(void);
 static void MX_USART6_UART_Init(void);
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -114,6 +116,8 @@ int main(void) {
 	MX_USART6_UART_Init();
 	/* USER CODE BEGIN 2 */
 
+	HAL_UART_Receive_IT(&huart5, &RxData, 1);
+
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -124,7 +128,6 @@ int main(void) {
 
 	/* Write message to buffer */
 	//ringbuff_write(rb_cm4_to_cm7, "[CM4] Core ready\r\n", 18);
-
 	/* Set default time */
 	time = t1 = t2 = HAL_GetTick();
 	char *str;
@@ -172,6 +175,14 @@ int main(void) {
 		}
 	}
 	/* USER CODE END 3 */
+}
+
+char data;
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+  HAL_UART_Receive_IT(&huart5, &RxData, 1);
+  data = RxData;
+
 }
 
 /**
