@@ -80,6 +80,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle);
 int main(void) {
 	/* USER CODE BEGIN 1 */
 	uint32_t i = 0, time, t1, t2;
+	uint8_t readSig[] = { 0xFF, 0xFF, 0x01, 0x04, 0x02, 0x38, 0x02, 0xBE };
 	/* USER CODE END 1 */
 
 	/* USER CODE BEGIN Boot_Mode_Sequence_1 */
@@ -161,7 +162,8 @@ int main(void) {
 			addr = ringbuff_get_linear_block_read_address(rb_cm7_to_cm4);
 
 			str = addr;
-			HAL_UART_Transmit(&huart5, addr, len, 1000);
+//			HAL_UART_Transmit(&huart5, addr, len, 1000);
+			HAL_UART_Transmit(&huart5, readSig, 8, 1000);
 
 			/*
 			 * `addr` holds pointer to beginning of data array
