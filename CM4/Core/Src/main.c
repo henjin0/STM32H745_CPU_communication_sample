@@ -81,6 +81,9 @@ int main(void) {
 	/* USER CODE BEGIN 1 */
 	uint32_t i = 0, time, t1, t2;
 	uint8_t readSig[] = { 0xFF, 0xFF, 0x01, 0x04, 0x02, 0x38, 0x02, 0xBE };
+	uint8_t rotSig[] = { 0xFF, 0xFF, 0x01, 0x0A, 0x03, 0x29, 0x00, 0xFF, 0x03,
+			0x00, 0x00, 0x00, 0x00, 0xC6 };
+	uint8_t rotSig2[] = { 0xFF,0xFF,0x01,0x0A,0x03,0x29,0x00,0x00,0x08,0x00,0x00,0x00,0x00,0xC0};
 	/* USER CODE END 1 */
 
 	/* USER CODE BEGIN Boot_Mode_Sequence_1 */
@@ -134,6 +137,7 @@ int main(void) {
 	time = t1 = t2 = HAL_GetTick();
 	char *str;
 	char retData[] = "CM4ret\r\n";
+
 	while (1) {
 		size_t len;
 		void *addr;
@@ -176,16 +180,23 @@ int main(void) {
 			/* Mark buffer as read to allow other writes from CPU1 */
 			ringbuff_skip(rb_cm7_to_cm4, len);
 		}
+
+		if (__HAL_UART_GET_FLAG(&huart5, UART_FLAG_ORE) ||
+		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_NE) ||
+		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_FE) ||
+		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_PE)) {
+			HAL_UART_Abort(&huart5);
+			HAL_UART_Receive_IT(&huart5, RxData, UART_DATALEN);
+		}
 	}
 	/* USER CODE END 3 */
 }
 
-char* data;
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
-{
-  HAL_UART_Receive_IT(&huart5, RxData, UART_DATALEN);
-  data = (char* )RxData;
-
+char *data;
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle) {
+	HAL_UART_Receive_IT(&huart5, RxData, UART_DATALEN);
+	float value = (RxData[6] << 8 | RxData[5]) * 360 / 4095;
+	return;
 }
 
 /**
@@ -203,7 +214,7 @@ static void MX_UART5_Init(void) {
 
 	/* USER CODE END UART5_Init 1 */
 	huart5.Instance = UART5;
-	huart5.Init.BaudRate = 115200;
+	huart5.Init.BaudRate = 1000000;
 	huart5.Init.WordLength = UART_WORDLENGTH_8B;
 	huart5.Init.StopBits = UART_STOPBITS_1;
 	huart5.Init.Parity = UART_PARITY_NONE;
