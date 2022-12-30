@@ -31,11 +31,15 @@ const int UART_DATALEN = 8;
 #define CENTERPOS (1.5)
 #define STRIDESTEP (0.8)
 #define SHORTSTEP (0.4)
+#define BUFFERSTEP_F_STRIDE (0.7)
+#define BUFFERSTEP_B_STRIDE (0)
+#define BUFFERSTEP_F_TROT (0.05)
+#define BUFFERSTEP_B_TROT (0)
 
-void ToggleServo1(float);
-void ToggleServo2(float);
-void ToggleServo3(float);
-void ToggleServo4(float);
+void ToggleServo1(float stride, float buffer_f, float buffer_b);
+void ToggleServo2(float stride, float buffer_f, float buffer_b);
+void ToggleServo3(float stride, float buffer_f, float buffer_b);
+void ToggleServo4(float stride, float buffer_f, float buffer_b);
 void initServo1(void);
 void initServo2(void);
 void initServo3(void);
@@ -187,10 +191,11 @@ int main(void) {
 		if (time - t2 >= 500) {
 			t2 = time;
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
-			ToggleServo1(STRIDESTEP);
-			ToggleServo2(STRIDESTEP);
-			ToggleServo3(SHORTSTEP);
-			ToggleServo4(SHORTSTEP);
+			ToggleServo1(STRIDESTEP, BUFFERSTEP_F_STRIDE, BUFFERSTEP_B_STRIDE);
+			ToggleServo2(STRIDESTEP, BUFFERSTEP_F_STRIDE, BUFFERSTEP_B_STRIDE);
+			ToggleServo3(SHORTSTEP, BUFFERSTEP_F_TROT, BUFFERSTEP_B_TROT);
+			ToggleServo4(SHORTSTEP, BUFFERSTEP_F_TROT, BUFFERSTEP_B_TROT);
+
 		}
 
 		/* Check if CPU1 sent some data to CPU2 core */
@@ -224,69 +229,71 @@ int main(void) {
 	/* USER CODE END 3 */
 }
 
-void ToggleServo1(float stride){
+void ToggleServo1(float stride, float buffer_f, float buffer_b) {
 	static int flag = FALSE;
 
-	if(flag){
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,(((CENTERPOS-stride)/20)*40000));
+	if (flag) {
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1,
+				(((CENTERPOS-stride+buffer_b)/20)*40000));
 		flag = FALSE;
-	}
-	else{
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,((CENTERPOS+stride)/20)*40000);
+	} else {
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1,
+				((CENTERPOS+stride-buffer_f)/20)*40000);
 		flag = TRUE;
 	}
 }
-void ToggleServo2(float stride){
-	static int flag = FALSE;
+void ToggleServo2(float stride, float buffer_f, float buffer_b) {
+	static int flag = TRUE;
 
-	if(flag){
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_2,(((CENTERPOS-stride)/20)*40000));
+	if (flag) {
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2,
+				(((CENTERPOS-stride+buffer_f)/20)*40000));
 		flag = FALSE;
-	}
-	else{
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_2,((CENTERPOS+stride)/20)*40000);
+	} else {
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2,
+				((CENTERPOS+stride-buffer_b)/20)*40000);
 		flag = TRUE;
 	}
 }
-void ToggleServo3(float stride){
+void ToggleServo3(float stride, float buffer_f, float buffer_b) {
 	static int flag = FALSE;
 
-	if(flag){
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_3,(((CENTERPOS-stride)/20)*40000));
+	if (flag) {
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3,
+				(((CENTERPOS-stride+buffer_b)/20)*40000));
 		flag = FALSE;
-	}
-	else{
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_3,((CENTERPOS+stride)/20)*40000);
+	} else {
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3,
+				((CENTERPOS+stride-buffer_f)/20)*40000);
 		flag = TRUE;
 	}
 }
-void ToggleServo4(float stride){
-	static int flag = FALSE;
+void ToggleServo4(float stride, float buffer_f, float buffer_b) {
+	static int flag = TRUE;
 
-	if(flag){
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,(((CENTERPOS-stride)/20)*40000));
+	if (flag) {
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,
+				(((CENTERPOS-stride+buffer_f)/20)*40000));
 		flag = FALSE;
-	}
-	else{
-		__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,((CENTERPOS+stride)/20)*40000);
+	} else {
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,
+				((CENTERPOS+stride-buffer_b+0.1)/20)*40000);
 		flag = TRUE;
 	}
 }
 
-
-void InitServo1(void){
-	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,(CENTERPOS/20)*40000);
+void InitServo1(void) {
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (CENTERPOS/20)*40000);
 }
-void InitServo2(void){
-	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_2,(CENTERPOS/20)*40000);
+void InitServo2(void) {
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, (CENTERPOS/20)*40000);
 }
-void InitServo3(void){
-	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_3,(CENTERPOS/20)*40000);
+void InitServo3(void) {
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, (CENTERPOS/20)*40000);
 }
-void InitServo4(void){
-	__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,((CENTERPOS/20)*40000));
+void InitServo4(void) {
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, ((CENTERPOS/20)*40000));
 }
-
 
 /**
  * @brief TIM1 Initialization Function
