@@ -20,14 +20,20 @@
 #include "main.h"
 #include "common.h"
 
+#define FALSE (0)
+#define TRUE (1)
+
 /* Ringbuffer variables */
 volatile ringbuff_t *rb_cm4_to_cm7 = (void*) BUFF_CM4_TO_CM7_ADDR;
 volatile ringbuff_t *rb_cm7_to_cm4 = (void*) BUFF_CM7_TO_CM4_ADDR;
 
 uint8_t RxData[8];
 const int UART_DATALEN = 8;
-#define FALSE (0)
-#define TRUE (1)
+uint8_t toggleFlag1;
+uint8_t toggleFlag2;
+uint8_t toggleFlag3;
+uint8_t toggleFlag4;
+
 #define CENTERPOS1 (1.45)	//F- B+
 #define CENTERPOS2 (1.66)	//F+ B-
 #define CENTERPOS3 (1.32)	//F- B+
@@ -44,16 +50,25 @@ const int UART_DATALEN = 8;
 #define BUFFERSTEP_F_4 (-0.1)
 #define BUFFERSTEP_B_4 (0)
 
-
-
+void InitWalk(void);
+void DoWalk(void);
+void InitTurnRight(void);
+void InitTurnLeft(void);
+void DoTurnRight(void);
+void DoTurnLeft(void);
+void InitSidestepRight(void);
+void InitSidestepLeft(void);
+void DoSidestepRight(void);
+void DoSidestepLeft(void);
 void ToggleServo1(float stride, float buffer_f, float buffer_b);
 void ToggleServo2(float stride, float buffer_f, float buffer_b);
 void ToggleServo3(float stride, float buffer_f, float buffer_b);
 void ToggleServo4(float stride, float buffer_f, float buffer_b);
-void initServo1(void);
-void initServo2(void);
-void initServo3(void);
-void initServo4(void);
+void InitServo1(void);
+void InitServo2(void);
+void InitServo3(void);
+void InitServo4(void);
+void DoStop(void);
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -160,11 +175,7 @@ int main(void) {
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
 
-	InitServo1();
-	InitServo2();
-	InitServo3();
-	InitServo4();
-
+	DoStop();
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -179,6 +190,9 @@ int main(void) {
 	time = t1 = t2 = HAL_GetTick();
 	char *str;
 	char retData[] = "CM4ret\r\n";
+
+	//InitWalk();
+	InitSidestepRight();
 
 	while (1) {
 		size_t len;
@@ -201,15 +215,12 @@ int main(void) {
 		if (time - t2 >= 500) {
 			t2 = time;
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
-			ToggleServo1(STRIDESTEP, BUFFERSTEP_F_1, BUFFERSTEP_B_1);
-			ToggleServo2(STRIDESTEP, BUFFERSTEP_F_2, BUFFERSTEP_B_2);
-			ToggleServo3(SHORTSTEP, BUFFERSTEP_F_3, BUFFERSTEP_B_3);
-			ToggleServo4(SHORTSTEP, BUFFERSTEP_F_4, BUFFERSTEP_B_4);
+			//DoWalk();
+			DoSidestepRight();
 //			InitServo1();
 //			InitServo2();
 //			InitServo3();
 //			InitServo4();
-
 
 		}
 
@@ -244,56 +255,130 @@ int main(void) {
 	/* USER CODE END 3 */
 }
 
-void ToggleServo1(float stride, float buffer_f, float buffer_b) {
-	static int flag = FALSE;
+void InitWalk(void) {
+	toggleFlag1 = FALSE;
+	toggleFlag2 = FALSE;
+	toggleFlag3 = TRUE;
+	toggleFlag4 = TRUE;
+}
 
-	if (flag) {
+void DoWalk(void) {
+	ToggleServo1(STRIDESTEP, BUFFERSTEP_F_1, BUFFERSTEP_B_1);
+	ToggleServo2(STRIDESTEP, BUFFERSTEP_F_2, BUFFERSTEP_B_2);
+	ToggleServo3(SHORTSTEP, BUFFERSTEP_F_3, BUFFERSTEP_B_3);
+	ToggleServo4(SHORTSTEP, BUFFERSTEP_F_4, BUFFERSTEP_B_4);
+}
+
+void InitTurnLeft(void) {
+	toggleFlag1 = FALSE;
+	toggleFlag2 = FALSE;
+	toggleFlag3 = FALSE;
+	toggleFlag4 = FALSE;
+}
+
+void DoTurnLeft(void) {
+	ToggleServo1(STRIDESTEP, BUFFERSTEP_F_1, BUFFERSTEP_B_1);
+	ToggleServo2(SHORTSTEP, BUFFERSTEP_F_2, BUFFERSTEP_B_2);
+	ToggleServo3(STRIDESTEP, BUFFERSTEP_F_3, BUFFERSTEP_B_3);
+	ToggleServo4(SHORTSTEP, BUFFERSTEP_F_4, BUFFERSTEP_B_4);
+}
+
+void InitTurnRight(void) {
+	toggleFlag1 = FALSE;
+	toggleFlag2 = FALSE;
+	toggleFlag3 = FALSE;
+	toggleFlag4 = FALSE;
+}
+
+void DoTurnRight(void) {
+	ToggleServo1(SHORTSTEP, BUFFERSTEP_F_1, BUFFERSTEP_B_1);
+	ToggleServo2(STRIDESTEP, BUFFERSTEP_F_2, BUFFERSTEP_B_2);
+	ToggleServo3(SHORTSTEP, BUFFERSTEP_F_3, BUFFERSTEP_B_3);
+	ToggleServo4(STRIDESTEP, BUFFERSTEP_F_4, BUFFERSTEP_B_4);
+}
+
+void InitSidestepRight(void) {
+	toggleFlag1 = FALSE;
+	toggleFlag2 = FALSE;
+	toggleFlag3 = TRUE;
+	toggleFlag4 = TRUE;
+}
+
+void DoSidestepRight(void) {
+	ToggleServo1(SHORTSTEP, BUFFERSTEP_F_1, BUFFERSTEP_B_1);
+	ToggleServo2(STRIDESTEP, BUFFERSTEP_F_2, BUFFERSTEP_B_2);
+	ToggleServo3(SHORTSTEP, BUFFERSTEP_F_3, BUFFERSTEP_B_3);
+	ToggleServo4(STRIDESTEP, BUFFERSTEP_F_4, BUFFERSTEP_B_4);
+}
+
+void InitSidestepLeft(void) {
+	toggleFlag1 = TRUE;
+	toggleFlag2 = TRUE;
+	toggleFlag3 = FALSE;
+	toggleFlag4 = FALSE;
+}
+
+void DoSidestepLeft(void) {
+	ToggleServo1(STRIDESTEP, BUFFERSTEP_F_1, BUFFERSTEP_B_1);
+	ToggleServo2(SHORTSTEP, BUFFERSTEP_F_2, BUFFERSTEP_B_2);
+	ToggleServo3(STRIDESTEP, BUFFERSTEP_F_3, BUFFERSTEP_B_3);
+	ToggleServo4(SHORTSTEP, BUFFERSTEP_F_4, BUFFERSTEP_B_4);
+
+}
+
+void DoStop(void) {
+	InitServo1();
+	InitServo2();
+	InitServo3();
+	InitServo4();
+}
+
+void ToggleServo1(float stride, float buffer_f, float buffer_b) {
+
+	if (toggleFlag1) {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1,
 				(((CENTERPOS1-stride+buffer_f)/20)*40000));
-		flag = FALSE;
+		toggleFlag1 = FALSE;
 	} else {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1,
 				((CENTERPOS1+stride-buffer_b)/20)*40000);
-		flag = TRUE;
+		toggleFlag1 = TRUE;
 	}
 }
 void ToggleServo2(float stride, float buffer_f, float buffer_b) {
-	static int flag = FALSE;
 
-	if (flag) {
+	if (toggleFlag2) {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2,
 				(((CENTERPOS2-stride+buffer_b)/20)*40000));
-		flag = FALSE;
+		toggleFlag2 = FALSE;
 	} else {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2,
 				((CENTERPOS2+stride-buffer_f)/20)*40000);
-		flag = TRUE;
+		toggleFlag2 = TRUE;
 	}
 }
 void ToggleServo3(float stride, float buffer_f, float buffer_b) {
-	static int flag = TRUE;
 
-	if (flag) {
+	if (toggleFlag3) {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3,
 				(((CENTERPOS3-stride+buffer_f)/20)*40000));
-		flag = FALSE;
+		toggleFlag3 = FALSE;
 	} else {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3,
 				((CENTERPOS3+stride-buffer_b)/20)*40000);
-		flag = TRUE;
+		toggleFlag3 = TRUE;
 	}
 }
 void ToggleServo4(float stride, float buffer_f, float buffer_b) {
-	static int flag = TRUE;
 
-	if (flag) {
+	if (toggleFlag4) {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,
 				(((CENTERPOS4-stride+buffer_b)/20)*40000));
-		flag = FALSE;
+		toggleFlag4 = FALSE;
 	} else {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,
 				((CENTERPOS4+stride-buffer_f)/20)*40000);
-		flag = TRUE;
+		toggleFlag4 = TRUE;
 	}
 }
 
