@@ -35,10 +35,16 @@ const int UART_DATALEN = 8;
 
 #define STRIDESTEP (0.5)
 #define SHORTSTEP (0.3)
-#define BUFFERSTEP_F_STRIDE (0)
-#define BUFFERSTEP_B_STRIDE (0)
-#define BUFFERSTEP_F_TROT (0)
-#define BUFFERSTEP_B_TROT (0)
+#define BUFFERSTEP_F_1 (0)
+#define BUFFERSTEP_B_1 (0)
+#define BUFFERSTEP_F_2 (0.1)
+#define BUFFERSTEP_B_2 (0.1)
+#define BUFFERSTEP_F_3 (0)
+#define BUFFERSTEP_B_3 (0)
+#define BUFFERSTEP_F_4 (-0.1)
+#define BUFFERSTEP_B_4 (0)
+
+
 
 void ToggleServo1(float stride, float buffer_f, float buffer_b);
 void ToggleServo2(float stride, float buffer_f, float buffer_b);
@@ -195,14 +201,14 @@ int main(void) {
 		if (time - t2 >= 500) {
 			t2 = time;
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
-//			ToggleServo1(STRIDESTEP, BUFFERSTEP_F_STRIDE, BUFFERSTEP_B_STRIDE);
-//			ToggleServo2(STRIDESTEP, BUFFERSTEP_F_STRIDE, BUFFERSTEP_B_STRIDE);
-//			ToggleServo3(SHORTSTEP, BUFFERSTEP_F_TROT, BUFFERSTEP_B_TROT);
-//			ToggleServo4(SHORTSTEP, BUFFERSTEP_F_TROT, BUFFERSTEP_B_TROT);
-			InitServo1();
-			InitServo2();
-			InitServo3();
-			InitServo4();
+			ToggleServo1(STRIDESTEP, BUFFERSTEP_F_1, BUFFERSTEP_B_1);
+			ToggleServo2(STRIDESTEP, BUFFERSTEP_F_2, BUFFERSTEP_B_2);
+			ToggleServo3(SHORTSTEP, BUFFERSTEP_F_3, BUFFERSTEP_B_3);
+			ToggleServo4(SHORTSTEP, BUFFERSTEP_F_4, BUFFERSTEP_B_4);
+//			InitServo1();
+//			InitServo2();
+//			InitServo3();
+//			InitServo4();
 
 
 		}
