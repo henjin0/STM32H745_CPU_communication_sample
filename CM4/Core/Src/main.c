@@ -28,12 +28,16 @@ uint8_t RxData[8];
 const int UART_DATALEN = 8;
 #define FALSE (0)
 #define TRUE (1)
-#define CENTERPOS (1.5)
-#define STRIDESTEP (0.8)
-#define SHORTSTEP (0.4)
-#define BUFFERSTEP_F_STRIDE (0.7)
+#define CENTERPOS1 (1.45)	//F- B+
+#define CENTERPOS2 (1.66)	//F+ B-
+#define CENTERPOS3 (1.32)	//F- B+
+#define CENTERPOS4 (1.78)	//F+ B-
+
+#define STRIDESTEP (0.5)
+#define SHORTSTEP (0.3)
+#define BUFFERSTEP_F_STRIDE (0)
 #define BUFFERSTEP_B_STRIDE (0)
-#define BUFFERSTEP_F_TROT (0.05)
+#define BUFFERSTEP_F_TROT (0)
 #define BUFFERSTEP_B_TROT (0)
 
 void ToggleServo1(float stride, float buffer_f, float buffer_b);
@@ -191,10 +195,15 @@ int main(void) {
 		if (time - t2 >= 500) {
 			t2 = time;
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
-			ToggleServo1(STRIDESTEP, BUFFERSTEP_F_STRIDE, BUFFERSTEP_B_STRIDE);
-			ToggleServo2(STRIDESTEP, BUFFERSTEP_F_STRIDE, BUFFERSTEP_B_STRIDE);
-			ToggleServo3(SHORTSTEP, BUFFERSTEP_F_TROT, BUFFERSTEP_B_TROT);
-			ToggleServo4(SHORTSTEP, BUFFERSTEP_F_TROT, BUFFERSTEP_B_TROT);
+//			ToggleServo1(STRIDESTEP, BUFFERSTEP_F_STRIDE, BUFFERSTEP_B_STRIDE);
+//			ToggleServo2(STRIDESTEP, BUFFERSTEP_F_STRIDE, BUFFERSTEP_B_STRIDE);
+//			ToggleServo3(SHORTSTEP, BUFFERSTEP_F_TROT, BUFFERSTEP_B_TROT);
+//			ToggleServo4(SHORTSTEP, BUFFERSTEP_F_TROT, BUFFERSTEP_B_TROT);
+			InitServo1();
+			InitServo2();
+			InitServo3();
+			InitServo4();
+
 
 		}
 
@@ -234,37 +243,37 @@ void ToggleServo1(float stride, float buffer_f, float buffer_b) {
 
 	if (flag) {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1,
-				(((CENTERPOS-stride+buffer_b)/20)*40000));
+				(((CENTERPOS1-stride+buffer_f)/20)*40000));
 		flag = FALSE;
 	} else {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1,
-				((CENTERPOS+stride-buffer_f)/20)*40000);
+				((CENTERPOS1+stride-buffer_b)/20)*40000);
 		flag = TRUE;
 	}
 }
 void ToggleServo2(float stride, float buffer_f, float buffer_b) {
-	static int flag = TRUE;
+	static int flag = FALSE;
 
 	if (flag) {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2,
-				(((CENTERPOS-stride+buffer_f)/20)*40000));
+				(((CENTERPOS2-stride+buffer_b)/20)*40000));
 		flag = FALSE;
 	} else {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2,
-				((CENTERPOS+stride-buffer_b)/20)*40000);
+				((CENTERPOS2+stride-buffer_f)/20)*40000);
 		flag = TRUE;
 	}
 }
 void ToggleServo3(float stride, float buffer_f, float buffer_b) {
-	static int flag = FALSE;
+	static int flag = TRUE;
 
 	if (flag) {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3,
-				(((CENTERPOS-stride+buffer_b)/20)*40000));
+				(((CENTERPOS3-stride+buffer_f)/20)*40000));
 		flag = FALSE;
 	} else {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3,
-				((CENTERPOS+stride-buffer_f)/20)*40000);
+				((CENTERPOS3+stride-buffer_b)/20)*40000);
 		flag = TRUE;
 	}
 }
@@ -273,26 +282,26 @@ void ToggleServo4(float stride, float buffer_f, float buffer_b) {
 
 	if (flag) {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,
-				(((CENTERPOS-stride+buffer_f)/20)*40000));
+				(((CENTERPOS4-stride+buffer_b)/20)*40000));
 		flag = FALSE;
 	} else {
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,
-				((CENTERPOS+stride-buffer_b+0.1)/20)*40000);
+				((CENTERPOS4+stride-buffer_f)/20)*40000);
 		flag = TRUE;
 	}
 }
 
 void InitServo1(void) {
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (CENTERPOS/20)*40000);
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (CENTERPOS1/20)*40000);
 }
 void InitServo2(void) {
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, (CENTERPOS/20)*40000);
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, (CENTERPOS2/20)*40000);
 }
 void InitServo3(void) {
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, (CENTERPOS/20)*40000);
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, (CENTERPOS3/20)*40000);
 }
 void InitServo4(void) {
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, ((CENTERPOS/20)*40000));
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, ((CENTERPOS4/20)*40000));
 }
 
 /**
