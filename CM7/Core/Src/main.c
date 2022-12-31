@@ -47,11 +47,16 @@ volatile ringbuff_t *rb_cm7_to_cm4 = (void*) BUFF_CM7_TO_CM4_ADDR;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+#define TRUE (1)
+#define FALSE (0)
 
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
+#define UART_DATALEN (10)
+uint8_t RxData[10];
+uint8_t receiveFlag;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -141,16 +146,20 @@ int main(void) {
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
-	HAL_UART_Transmit(&huart3, (void*) "[CM7] Core ready\r\n", 18, 100);
+	/* Infinite loop */
+	/* USER CODE BEGIN WHILE */
+	//HAL_UART_Transmit(&huart3, (void*) "[CM7] Core ready\r\n", 18, 100);
 	while (!ringbuff_is_ready(rb_cm4_to_cm7)
 			|| !ringbuff_is_ready(rb_cm7_to_cm4)) {
 	}
-//	ringbuff_write(rb_cm7_to_cm4, "[CM7] Core ready\r\n", 18);
 
 	/* Set default time */
 	time = t1 = HAL_GetTick();
 	char *str;
 	uint32_t i = 0;
+
+	HAL_UART_Receive_IT(&huart4, RxData, UART_DATALEN);
+	receiveFlag = FALSE;
 
 	while (1) {
 		size_t len;
@@ -158,16 +167,16 @@ int main(void) {
 
 		time = HAL_GetTick();
 
-
 		/* Check if CPU2 sent some data to CPU1 core */
 		while ((len = ringbuff_get_linear_block_read_length(rb_cm4_to_cm7)) > 0) {
 			addr = ringbuff_get_linear_block_read_address(rb_cm4_to_cm7);
 			str = addr;
 			/* Transmit data */
-			//HAL_UART_Transmit(&huart3, addr, len, 1000);
-			ringbuff_write(rb_cm7_to_cm4, "[CM7] return\r\n", 14);
-
-			HAL_UART_Transmit(&huart2, addr, len, 1000);
+			if (receiveFlag) {
+				ringbuff_write(rb_cm7_to_cm4, RxData, UART_DATALEN);
+				receiveFlag = FALSE;
+				HAL_UART_Receive_IT(&huart4, &RxData, UART_DATALEN);
+			}
 
 			/* Mark buffer as read */
 			ringbuff_skip(rb_cm4_to_cm7, len);
@@ -179,14 +188,14 @@ int main(void) {
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 		}
 
-		/*
-		 * If CPU1 wants to send data to CPU2,
-		 * it uses second buffer pipe, rb_cm7_to_cm4
-		 * is written by CPU1 and read by CPU2.
-		 */
-		//ringbuff_write(rb_cm7_to_cm4, "my_data", 7);
 	}
 	/* USER CODE END 3 */
+	/* USER CODE END 3 */
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle) {
+	if (UartHandle == &huart4)
+		receiveFlag = TRUE;
 }
 
 /**

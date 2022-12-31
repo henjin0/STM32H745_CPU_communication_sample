@@ -27,8 +27,8 @@
 volatile ringbuff_t *rb_cm4_to_cm7 = (void*) BUFF_CM4_TO_CM7_ADDR;
 volatile ringbuff_t *rb_cm7_to_cm4 = (void*) BUFF_CM7_TO_CM4_ADDR;
 
-uint8_t RxData[8];
-const int UART_DATALEN = 8;
+uint8_t RxData[10];
+const int UART_DATALEN = 10;
 uint8_t toggleFlag1;
 uint8_t toggleFlag2;
 uint8_t toggleFlag3;
@@ -188,9 +188,7 @@ int main(void) {
 	//ringbuff_write(rb_cm4_to_cm7, "[CM4] Core ready\r\n", 18);
 	/* Set default time */
 	time = t1 = t2 = HAL_GetTick();
-	char *str;
-	char retData[] = "CM4ret\r\n";
-
+	char str[10];
 	//InitWalk();
 	InitSidestepRight();
 
@@ -206,7 +204,7 @@ int main(void) {
 			char c = '0' + (++i % 10);
 
 			/* Write to buffer from CPU2 to CPU1 */
-			ringbuff_write(rb_cm4_to_cm7, "[CM4] Number: ", 14);
+			ringbuff_write(rb_cm4_to_cm7, "[CM4] Call: ", 12);
 			ringbuff_write(rb_cm4_to_cm7, &c, 1);
 			ringbuff_write(rb_cm4_to_cm7, "\r\n", 2);
 		}
@@ -215,22 +213,42 @@ int main(void) {
 		if (time - t2 >= 500) {
 			t2 = time;
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
-			//DoWalk();
-			DoSidestepRight();
-//			InitServo1();
-//			InitServo2();
-//			InitServo3();
-//			InitServo4();
 
+			if (strncmp(str, "STOP", 4) == 0) {
+				DoStop();
+			} else if (strncmp(str, "WALK", 4) == 0) {
+				DoWalk();
+			} else if (strncmp(str, "SIDESTR", 7) == 0) {
+				DoSidestepRight();
+			} else if (strncmp(str, "SIDESTL", 7) == 0) {
+				DoSidestepLeft();
+			} else if (strncmp(str, "TURNR", 5) == 0) {
+				DoTurnRight();
+			} else if (strncmp(str, "TURNL", 5) == 0) {
+				DoTurnLeft();
+			}
 		}
 
 		/* Check if CPU1 sent some data to CPU2 core */
 		while ((len = ringbuff_get_linear_block_read_length(rb_cm7_to_cm4)) > 0) {
 			addr = ringbuff_get_linear_block_read_address(rb_cm7_to_cm4);
 
-			str = addr;
-			//			HAL_UART_Transmit(&huart5, addr, len, 1000);
-			HAL_UART_Transmit(&huart5, readSig, 8, 1000);
+			strncpy(str, addr, UART_DATALEN);
+			HAL_UART_Transmit(&huart5, addr, UART_DATALEN, 1000);
+
+			if (strncmp(str, "STOP", 4) == 0) {
+				DoStop();
+			} else if (strncmp(str, "WALK", 4) == 0) {
+				InitWalk();
+			} else if (strncmp(str, "SIDESTR", 7) == 0) {
+				InitSidestepRight();
+			} else if (strncmp(str, "SIDESTL", 7) == 0) {
+				InitSidestepLeft();
+			} else if (strncmp(str, "TURNR", 5) == 0) {
+				InitTurnRight();
+			} else if (strncmp(str, "TURNL", 5) == 0) {
+				InitTurnLeft();
+			}
 
 			/*
 			 * `addr` holds pointer to beginning of data array
