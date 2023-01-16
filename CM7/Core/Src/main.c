@@ -82,7 +82,7 @@ static void MX_UART4_Init(void);
  */
 int main(void) {
 	/* USER CODE BEGIN 1 */
-	uint32_t time, t1;
+	uint32_t time, t1, t2;
 	/* USER CODE END 1 */
 	/* USER CODE BEGIN Boot_Mode_Sequence_0 */
 	int32_t timeout;
@@ -154,13 +154,16 @@ int main(void) {
 	}
 
 	/* Set default time */
-	time = t1 = HAL_GetTick();
+	time = t1 = t2 = HAL_GetTick();
 	char *str;
 	uint32_t i = 0;
 
 	HAL_UART_Receive_IT(&huart4, RxData, UART_DATALEN);
 	receiveFlag = FALSE;
 
+	char sendOP[4][9]={"STOP____","WALK____","SIDESTR_","TURNL___"};
+
+	int counter = 0;
 	while (1) {
 		size_t len;
 		void *addr;
@@ -187,6 +190,15 @@ int main(void) {
 			t1 = time;
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 		}
+
+		if(time - t2 >= 3000){
+			t2 = time;
+			counter = counter + 1;
+			ringbuff_write(rb_cm7_to_cm4, sendOP[counter], UART_DATALEN);
+		}
+		if(counter >= 3)
+			counter = 0;
+
 
 	}
 	/* USER CODE END 3 */
